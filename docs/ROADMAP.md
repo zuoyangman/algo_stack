@@ -9,8 +9,8 @@ Legend: ✅ implemented · 🟡 in progress · ⬜ planned
 - ✅ Logistic Regression (binary + multinomial) (`supervised/logistic_regression`)
 - ⬜ Ridge Regression
 - ⬜ Lasso Regression (coordinate descent)
-- ⬜ Softmax Classifier (stand-alone)
-- ⬜ Perceptron
+- ✅ Softmax Classifier (`supervised/softmax_classifier`)
+- ✅ Perceptron (`supervised/perceptron`)
 - ⬜ Linear Discriminant Analysis
 
 ### Instance-based
@@ -33,8 +33,14 @@ Legend: ✅ implemented · 🟡 in progress · ⬜ planned
 
 ### Neural networks
 - ✅ Multi-Layer Perceptron (`supervised/mlp`)
-- ⬜ Convolutional Neural Network (toy)
-- ⬜ RNN (toy)
+- ✅ Perceptron (`supervised/perceptron`)
+- ✅ Softmax Classifier (`supervised/softmax_classifier`)
+- ✅ Convolutional Neural Network — toy (`supervised/cnn`)
+- ✅ Vanilla RNN — toy (`supervised/rnn`)
+- ✅ Autoencoder (`unsupervised/autoencoder`)
+- ⬜ LSTM / GRU
+- ⬜ Denoising / Variational Autoencoder
+- ⬜ Convolutional Autoencoder
 
 ## Unsupervised learning
 
@@ -65,7 +71,7 @@ Legend: ✅ implemented · 🟡 in progress · ⬜ planned
 - ⬜ Curated metric module (currently a utility)
 
 ## Optimisation primitives (shared)
-- ⬜ Gradient Descent / Momentum / Adam (factor out from MLP / LogReg)
+- ✅ SGD / Momentum / Adam (`utils/optim.py`)
 - ⬜ Line search / L-BFGS-style optimiser
 
 ---

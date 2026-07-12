@@ -31,14 +31,19 @@ algo_stack/
 ├── algo_stack/              <- the importable Python package
 │   ├── __init__.py
 │   ├── _base.py             <- BaseEstimator / mixin classes
-│   ├── utils/               <- shared metrics / preprocessing / validation
+│   ├── utils/               <- shared metrics / preprocessing / validation / activations / optim
 │   ├── supervised/
 │   │   ├── linear_regression/
 │   │   ├── logistic_regression/
 │   │   ├── knn/
-│   │   └── mlp/
+│   │   ├── perceptron/
+│   │   ├── softmax_classifier/
+│   │   ├── mlp/
+│   │   ├── cnn/
+│   │   └── rnn/
 │   └── unsupervised/
-│       └── kmeans/
+│       ├── kmeans/
+│       └── autoencoder/
 └── tests/                   <- pytest suite, one file per algorithm
 ```
 
@@ -93,8 +98,15 @@ python -m algo_stack.supervised.linear_regression.example
 | Supervised    | Linear Regression    | `algo_stack.supervised.linear_regression`                |
 | Supervised    | Logistic Regression  | `algo_stack.supervised.logistic_regression`              |
 | Supervised    | K-Nearest Neighbours | `algo_stack.supervised.knn`                              |
+| Supervised    | Perceptron           | `algo_stack.supervised.perceptron`                       |
+| Supervised    | Softmax Classifier   | `algo_stack.supervised.softmax_classifier`               |
 | Supervised    | Multi-Layer Perceptron | `algo_stack.supervised.mlp`                            |
+| Supervised    | CNN (toy)            | `algo_stack.supervised.cnn`                              |
+| Supervised    | RNN (vanilla, toy)   | `algo_stack.supervised.rnn`                              |
 | Unsupervised  | K-Means              | `algo_stack.unsupervised.kmeans`                         |
+| Unsupervised  | Autoencoder          | `algo_stack.unsupervised.autoencoder`                    |
+
+Shared neural-network primitives: `algo_stack.utils.activations`, `algo_stack.utils.optim`.
 
 See [`docs/ROADMAP.md`](docs/ROADMAP.md) for the planned algorithm list.
 
