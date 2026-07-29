@@ -24,6 +24,7 @@ algo_stack/<category>/<algorithm_name>/
 - `unsupervised`   – uses only `X`
 - `preprocessing`  – transformers that produce new `X` (same four-file layout)
 - `metrics`        – pure evaluation functions (package of callables, not estimators)
+- `optimization`   – stand-alone optimisers (L-BFGS, …) used by estimators
 - *(extend as needed)*
 
 `<algorithm_name>` must be **lower_snake_case** and match the canonical name of

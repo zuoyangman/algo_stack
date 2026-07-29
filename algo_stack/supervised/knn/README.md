@@ -18,8 +18,8 @@ Both classes share the constructor signature:
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| `KNNClassifier(*, n_neighbors=5, weights="uniform", metric="euclidean")` | constructor | `weights` is `"uniform"` or `"distance"`. `metric` currently only supports `"euclidean"`. |
-| `KNNRegressor (*, n_neighbors=5, weights="uniform", metric="euclidean")` | constructor | Same. |
+| `KNNClassifier(*, n_neighbors=5, weights="uniform", metric="euclidean", algorithm="auto", leaf_size=16)` | constructor | `algorithm` is `"auto"` / `"brute"` / `"kd_tree"` / `"ball_tree"`. |
+| `KNNRegressor (*, …)` | constructor | Same kwargs. |
 | `.fit(X, y)`            | method      | Just memorises the training set. Returns `self`. |
 | `.predict(X)`           | method      | Labels (classifier) or values (regressor). |
 | `.predict_proba(X)`     | method      | (classifier only) Class probabilities. |

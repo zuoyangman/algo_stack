@@ -4,7 +4,7 @@ Only put **algorithm-agnostic** helpers here. Anything specific to a single
 algorithm belongs in that algorithm's folder.
 """
 
-from algo_stack.utils import activations, optim
+from algo_stack.utils import activations, kernels, lbfgs, neighbors, optim
 from algo_stack.utils.metrics import (
     accuracy_score,
     mean_squared_error,
@@ -19,6 +19,9 @@ from algo_stack.utils.validation import (
 
 __all__ = [
     "activations",
+    "kernels",
+    "lbfgs",
+    "neighbors",
     "optim",
     "accuracy_score",
     "mean_squared_error",

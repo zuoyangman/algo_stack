@@ -5,22 +5,24 @@ from __future__ import annotations
 import numpy as np
 
 from algo_stack._base import BaseEstimator, ClassifierMixin
-from algo_stack.utils import activations, optim
+from algo_stack.utils import activations, lbfgs, optim
 from algo_stack.utils.validation import check_array, check_random_state, check_X_y
 
 
 class SoftmaxClassifier(BaseEstimator, ClassifierMixin):
-    """Linear layer + softmax + cross-entropy, trained with mini-batch GD.
+    """Linear layer + softmax + cross-entropy.
 
-    This is the same model class taught in CS231n-style courses as the
-    "Softmax classifier" — distinct from ``logistic_regression`` which uses
-    full-batch GD and shares the GLM framing.
+    Supports mini-batch first-order optimisers (``sgd`` / ``momentum`` /
+    ``adam``) and full-batch ``lbfgs``.
 
     Parameters
     ----------
     learning_rate : float, default 0.1
-    optimizer : {"sgd", "momentum", "adam"}, default "momentum"
+        Used by first-order optimisers only.
+    optimizer : {"sgd", "momentum", "adam", "lbfgs"}, default "momentum"
     n_epochs : int, default 200
+        Max epochs for first-order solvers; max L-BFGS iterations when
+        ``optimizer="lbfgs"``.
     batch_size : int, default 32
     l2 : float, default 0.0
         L2 penalty on weights (bias not penalised).
@@ -75,6 +77,45 @@ class SoftmaxClassifier(BaseEstimator, ClassifierMixin):
     def predict(self, X: np.ndarray) -> np.ndarray:
         return self.classes_[np.argmax(self.predict_proba(X), axis=1)]
 
+    def _pack(self) -> np.ndarray:
+        return np.concatenate([self.coef_.ravel(), self.intercept_.ravel()])
+
+    def _unpack(self, theta: np.ndarray) -> None:
+        K, d = self.coef_.shape
+        self.coef_ = theta[: K * d].reshape(K, d)
+        self.intercept_ = theta[K * d :].copy()
+
+    def _fit_lbfgs(self, X: np.ndarray, Y_full: np.ndarray) -> None:
+        n_samples = X.shape[0]
+
+        def fun(theta: np.ndarray) -> float:
+            self._unpack(theta)
+            probs = activations.softmax(X @ self.coef_.T + self.intercept_)
+            eps = 1e-12
+            loss = float(-np.mean(np.sum(Y_full * np.log(probs + eps), axis=1)))
+            if self.l2:
+                loss += 0.5 * self.l2 * float(np.sum(self.coef_ * self.coef_)) / n_samples
+            return loss
+
+        def jac(theta: np.ndarray) -> np.ndarray:
+            self._unpack(theta)
+            probs = activations.softmax(X @ self.coef_.T + self.intercept_)
+            delta = (probs - Y_full) / n_samples
+            grad_W = delta.T @ X
+            if self.l2:
+                grad_W = grad_W + (self.l2 / n_samples) * self.coef_
+            grad_b = delta.sum(axis=0)
+            if not self.fit_intercept:
+                grad_b = np.zeros_like(grad_b)
+            return np.concatenate([grad_W.ravel(), grad_b.ravel()])
+
+        result = lbfgs.minimize_lbfgs(
+            fun, self._pack(), jac=jac, max_iter=self.n_epochs, tol=self.tol
+        )
+        self._unpack(result.x)
+        self.loss_curve_ = list(result.loss_curve)
+        self.n_iter_ = result.n_iter
+
     def fit(self, X: np.ndarray, y: np.ndarray) -> "SoftmaxClassifier":
         X, y = check_X_y(X, y, y_numeric=False)
         self.classes_, y_idx = np.unique(y, return_inverse=True)
@@ -87,11 +128,15 @@ class SoftmaxClassifier(BaseEstimator, ClassifierMixin):
         scale = np.sqrt(1.0 / n_features)
         self.coef_ = rng.standard_normal((K, n_features)) * scale * 0.01
         self.intercept_ = np.zeros(K)
+        Y_full = np.eye(K)[y_idx]
+
+        if self.optimizer == "lbfgs":
+            self._fit_lbfgs(X, Y_full)
+            return self
 
         opt = optim.make_optimizer(self.optimizer, learning_rate=self.learning_rate)
         opt.reset(self._params())
 
-        Y_full = np.eye(K)[y_idx]
         self.loss_curve_: list[float] = []
         prev_loss: float | None = None
 
@@ -110,6 +155,8 @@ class SoftmaxClassifier(BaseEstimator, ClassifierMixin):
                 grad_b = delta.sum(axis=0)
                 if self.l2:
                     grad_W += (self.l2 / n_b) * self.coef_
+                if not self.fit_intercept:
+                    grad_b = np.zeros_like(grad_b)
                 opt.step(self._params(), [grad_W, grad_b])
 
             probs_all = activations.softmax(X @ self.coef_.T + self.intercept_)

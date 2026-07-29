@@ -1,8 +1,6 @@
-"""K-Nearest-Neighbours classifier & regressor (brute-force, NumPy).
+"""K-Nearest-Neighbours classifier & regressor (NumPy).
 
-The brute-force `O(n_train · n_query · d)` distance computation is the
-clearest reference implementation. See ``EXTENSION.md`` for KD-tree / Ball-tree
-acceleration ideas.
+Supports brute-force, KD-Tree, and Ball-Tree neighbour search.
 """
 
 from __future__ import annotations
@@ -10,27 +8,23 @@ from __future__ import annotations
 import numpy as np
 
 from algo_stack._base import BaseEstimator, ClassifierMixin, RegressorMixin
+from algo_stack.utils.neighbors import BallTree, KDTree
 from algo_stack.utils.validation import check_array, check_X_y
 
 
 def _pairwise_sq_euclidean(A: np.ndarray, B: np.ndarray) -> np.ndarray:
-    """Return the matrix of squared L2 distances between rows of A and B.
+    """Squared L2 distances via ``||a−b||² = ||a||² + ||b||² − 2 a·b``."""
 
-    Uses the identity ``||a − b||² = ||a||² + ||b||² − 2 a·b`` so we only
-    issue one matrix multiplication. Negative values caused by floating
-    point are clipped to 0 before sqrt is taken.
-    """
-
-    aa = np.sum(A * A, axis=1)[:, None]      # (n_a, 1)
-    bb = np.sum(B * B, axis=1)[None, :]      # (1, n_b)
-    cross = A @ B.T                          # (n_a, n_b)
+    aa = np.sum(A * A, axis=1)[:, None]
+    bb = np.sum(B * B, axis=1)[None, :]
+    cross = A @ B.T
     d2 = aa + bb - 2.0 * cross
     np.maximum(d2, 0.0, out=d2)
     return d2
 
 
 class _KNNBase(BaseEstimator):
-    """Shared fit/neighbour-lookup logic for the classifier and regressor."""
+    """Shared fit / neighbour-lookup logic for classifier and regressor."""
 
     def __init__(
         self,
@@ -38,10 +32,14 @@ class _KNNBase(BaseEstimator):
         n_neighbors: int = 5,
         weights: str = "uniform",
         metric: str = "euclidean",
+        algorithm: str = "auto",
+        leaf_size: int = 16,
     ) -> None:
         self.n_neighbors = n_neighbors
         self.weights = weights
         self.metric = metric
+        self.algorithm = algorithm
+        self.leaf_size = leaf_size
 
     def _validate_init(self) -> None:
         if self.n_neighbors < 1:
@@ -52,10 +50,29 @@ class _KNNBase(BaseEstimator):
             raise ValueError(
                 f"metric={self.metric!r} not supported; only 'euclidean' for now."
             )
+        if self.algorithm not in ("auto", "brute", "kd_tree", "ball_tree"):
+            raise ValueError(
+                f"algorithm={self.algorithm!r}; expected "
+                "'auto', 'brute', 'kd_tree', or 'ball_tree'."
+            )
+
+    def _choose_algorithm(self, n_features: int) -> str:
+        if self.algorithm != "auto":
+            return self.algorithm
+        # Trees help most in low–moderate dimensions.
+        return "kd_tree" if n_features <= 15 else "brute"
 
     def _store(self, X: np.ndarray, y: np.ndarray) -> None:
         self.X_train_ = X
         self.y_train_ = y
+        algo = self._choose_algorithm(X.shape[1])
+        self.algorithm_ = algo
+        if algo == "kd_tree":
+            self._tree_ = KDTree(X, leaf_size=self.leaf_size)
+        elif algo == "ball_tree":
+            self._tree_ = BallTree(X, leaf_size=self.leaf_size)
+        else:
+            self._tree_ = None
 
     def _kneighbors(self, X: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         """Return (distances, indices) of the k nearest training points."""
@@ -65,8 +82,11 @@ class _KNNBase(BaseEstimator):
         n_train = self.X_train_.shape[0]
         k = min(self.n_neighbors, n_train)
 
+        if self._tree_ is not None:
+            dists, idxs = self._tree_.query(X, k=k, return_distance=True)
+            return dists, idxs
+
         d2 = _pairwise_sq_euclidean(X, self.X_train_)
-        # argpartition gives the k smallest unsorted; then we sort just those k.
         part = np.argpartition(d2, kth=k - 1, axis=1)[:, :k]
         row_idx = np.arange(X.shape[0])[:, None]
         d2_k = d2[row_idx, part]
@@ -79,11 +99,22 @@ class _KNNBase(BaseEstimator):
 class KNNClassifier(_KNNBase, ClassifierMixin):
     """K-Nearest-Neighbours classifier.
 
+    Parameters
+    ----------
+    n_neighbors : int, default 5
+    weights : {"uniform", "distance"}, default "uniform"
+    metric : {"euclidean"}, default "euclidean"
+    algorithm : {"auto", "brute", "kd_tree", "ball_tree"}, default "auto"
+    leaf_size : int, default 16
+        Leaf size for Ball-Tree (ignored by KD-Tree in this reference impl).
+
     Attributes
     ----------
     classes_ : ndarray
     X_train_ : ndarray of shape (n_train, n_features)
-    y_train_ : ndarray of shape (n_train,) (integer-encoded class indices)
+    y_train_ : ndarray of shape (n_train,)
+    algorithm_ : str
+        Concrete algorithm chosen after ``fit``.
     """
 
     def fit(self, X: np.ndarray, y: np.ndarray) -> "KNNClassifier":
@@ -96,17 +127,15 @@ class KNNClassifier(_KNNBase, ClassifierMixin):
     def predict_proba(self, X: np.ndarray) -> np.ndarray:
         dists, neigh = self._kneighbors(X)
         n_classes = len(self.classes_)
-        neighbour_labels = self.y_train_[neigh]  # (n_query, k)
+        neighbour_labels = self.y_train_[neigh]
         n_query, k = neighbour_labels.shape
 
         if self.weights == "uniform":
             w = np.ones_like(neighbour_labels, dtype=np.float64)
-        else:  # "distance"
-            # Inverse distance, with eps for stability if duplicates exist.
+        else:
             w = 1.0 / (dists + 1e-12)
 
         proba = np.zeros((n_query, n_classes))
-        # vectorised scatter-add along axis=1
         np.add.at(proba, (np.arange(n_query)[:, None], neighbour_labels), w)
         proba /= proba.sum(axis=1, keepdims=True)
         return proba
@@ -119,10 +148,7 @@ class KNNClassifier(_KNNBase, ClassifierMixin):
 class KNNRegressor(_KNNBase, RegressorMixin):
     """K-Nearest-Neighbours regressor.
 
-    Attributes
-    ----------
-    X_train_ : ndarray of shape (n_train, n_features)
-    y_train_ : ndarray of shape (n_train,)
+    Same constructor as ``KNNClassifier``.
     """
 
     def fit(self, X: np.ndarray, y: np.ndarray) -> "KNNRegressor":
@@ -133,7 +159,7 @@ class KNNRegressor(_KNNBase, RegressorMixin):
 
     def predict(self, X: np.ndarray) -> np.ndarray:
         dists, neigh = self._kneighbors(X)
-        targets = self.y_train_[neigh]  # (n_query, k)
+        targets = self.y_train_[neigh]
         if self.weights == "uniform":
             return targets.mean(axis=1)
         w = 1.0 / (dists + 1e-12)

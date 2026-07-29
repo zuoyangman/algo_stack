@@ -127,10 +127,12 @@ python -m algo_stack.supervised.random_forest.example
 | OneHotEncoder | `algo_stack.preprocessing.one_hot_encoder` |
 | PolynomialFeatures | `algo_stack.preprocessing.polynomial_features` |
 | Metrics suite | `algo_stack.metrics` |
+| L-BFGS + Wolfe line search | `algo_stack.optimization.lbfgs` |
 
-Shared primitives: `algo_stack.utils.activations`, `optim`, `kernels`.
+Shared primitives: `algo_stack.utils.activations`, `optim`, `kernels`,
+`neighbors` (KD-Tree / Ball-Tree), `lbfgs` (also under `algo_stack.optimization.lbfgs`).
 
-See [`docs/ROADMAP.md`](docs/ROADMAP.md) for remaining stretch goals (KD-tree, L-BFGS).
+See [`docs/ROADMAP.md`](docs/ROADMAP.md) for the full checklist.
 
 ---
 

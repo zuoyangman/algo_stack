@@ -15,7 +15,7 @@ Legend: ✅ implemented · 🟡 in progress · ⬜ planned
 
 ### Instance-based
 - ✅ K-Nearest Neighbours — classification + regression; uniform & distance weights (`supervised/knn`)
-- ⬜ KD-tree / Ball-tree acceleration for KNN
+- ✅ KD-tree / Ball-tree acceleration (`utils/neighbors.py`; wired into KNN via `algorithm=`)
 
 ### Tree-based
 - ✅ Decision Tree — CART (`supervised/decision_tree`)
@@ -74,8 +74,8 @@ Legend: ✅ implemented · 🟡 in progress · ⬜ planned
 - ✅ SGD / Momentum / Adam (`utils/optim.py`)
 - ✅ Linear / RBF / Polynomial kernels (`utils/kernels.py`)
 - ✅ Activations (`utils/activations.py`)
-- ⬜ Line search / L-BFGS-style optimiser
-- ⬜ KD-tree / Ball-tree neighbour index
+- ✅ Strong Wolfe line search + L-BFGS (`utils/lbfgs.py`, `optimization/lbfgs`)
+- ✅ KD-tree / Ball-tree neighbour index (`utils/neighbors.py`)
 
 ---
 
