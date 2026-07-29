@@ -18,44 +18,26 @@ the core logic). The repository is designed to be:
 
 ```
 algo_stack/
-├── README.md                <- this file
-├── requirements.txt
-├── pyproject.toml
-├── docs/
-│   ├── CONVENTIONS.md       <- directory & coding conventions every algorithm follows
-│   ├── ROADMAP.md           <- checklist of algorithms (done + planned)
-│   └── templates/           <- copy-paste templates for new algorithms
-│       ├── README.template.md
-│       ├── PRINCIPLE.template.md
-│       └── EXTENSION.template.md
-├── algo_stack/              <- the importable Python package
-│   ├── __init__.py
-│   ├── _base.py             <- BaseEstimator / mixin classes
-│   ├── utils/               <- shared metrics / preprocessing / validation / activations / optim
-│   ├── supervised/
-│   │   ├── linear_regression/
-│   │   ├── logistic_regression/
-│   │   ├── knn/
-│   │   ├── perceptron/
-│   │   ├── softmax_classifier/
-│   │   ├── mlp/
-│   │   ├── cnn/
-│   │   └── rnn/
-│   └── unsupervised/
-│       ├── kmeans/
-│       └── autoencoder/
-└── tests/                   <- pytest suite, one file per algorithm
+├── README.md
+├── docs/CONVENTIONS.md · ROADMAP.md · templates/
+├── algo_stack/
+│   ├── _base.py · utils/ (validation, metrics, preprocessing, activations, optim, kernels)
+│   ├── supervised/     # regressors & classifiers
+│   ├── unsupervised/   # clustering, DR, density, autoencoders
+│   ├── preprocessing/  # scalers, encoders, feature expansion
+│   └── metrics/        # curated scoring functions
+└── tests/
 ```
 
 Every algorithm folder follows the **same four-file convention**
 (see [`docs/CONVENTIONS.md`](docs/CONVENTIONS.md)):
 
-| File            | Purpose                                                      |
-| --------------- | ------------------------------------------------------------ |
-| `README.md`     | Quick start, public API, usage examples.                     |
-| `PRINCIPLE.md`  | Math, derivations, complexity, design choices.               |
-| `EXTENSION.md`  | How to plug in variants / regularisers / new solvers safely. |
-| `*.py` + `example.py` | Reference NumPy implementation + runnable demo.        |
+| File | Purpose |
+| ---- | ------- |
+| `README.md` | Quick start, public API, usage examples |
+| `PRINCIPLE.md` | Math, derivations, complexity, design choices |
+| `EXTENSION.md` | How to plug in variants safely |
+| `*.py` + `example.py` | Reference NumPy implementation + runnable demo |
 
 ---
 
@@ -64,12 +46,10 @@ Every algorithm folder follows the **same four-file convention**
 ```bash
 git clone <this-repo>
 cd algo_stack
-pip install -e .          # installs the algo_stack package + numpy
-pip install -r requirements-dev.txt  # pytest etc. (optional)
-pytest                    # run the test suite
+pip install -e .
+pip install -r requirements-dev.txt
+pytest
 ```
-
-Use any algorithm as a normal Python class:
 
 ```python
 import numpy as np
@@ -77,38 +57,80 @@ from algo_stack.supervised.linear_regression import LinearRegression
 
 X = np.random.randn(100, 3)
 y = X @ np.array([1.5, -2.0, 0.5]) + 0.1 * np.random.randn(100)
-
 model = LinearRegression().fit(X, y)
-print(model.coef_, model.intercept_)
-print("R^2 =", model.score(X, y))
+print(model.coef_, model.intercept_, model.score(X, y))
 ```
 
-Run any algorithm's standalone demo:
-
 ```bash
-python -m algo_stack.supervised.linear_regression.example
+python -m algo_stack.supervised.random_forest.example
 ```
 
 ---
 
 ## Currently implemented
 
-| Category      | Algorithm            | Module path                                              |
-| ------------- | -------------------- | -------------------------------------------------------- |
-| Supervised    | Linear Regression    | `algo_stack.supervised.linear_regression`                |
-| Supervised    | Logistic Regression  | `algo_stack.supervised.logistic_regression`              |
-| Supervised    | K-Nearest Neighbours | `algo_stack.supervised.knn`                              |
-| Supervised    | Perceptron           | `algo_stack.supervised.perceptron`                       |
-| Supervised    | Softmax Classifier   | `algo_stack.supervised.softmax_classifier`               |
-| Supervised    | Multi-Layer Perceptron | `algo_stack.supervised.mlp`                            |
-| Supervised    | CNN (toy)            | `algo_stack.supervised.cnn`                              |
-| Supervised    | RNN (vanilla, toy)   | `algo_stack.supervised.rnn`                              |
-| Unsupervised  | K-Means              | `algo_stack.unsupervised.kmeans`                         |
-| Unsupervised  | Autoencoder          | `algo_stack.unsupervised.autoencoder`                    |
+### Supervised — linear / GLM
+| Algorithm | Module |
+| --------- | ------ |
+| Linear Regression | `algo_stack.supervised.linear_regression` |
+| Ridge | `algo_stack.supervised.ridge` |
+| Lasso | `algo_stack.supervised.lasso` |
+| Logistic Regression | `algo_stack.supervised.logistic_regression` |
+| Softmax Classifier | `algo_stack.supervised.softmax_classifier` |
+| Perceptron | `algo_stack.supervised.perceptron` |
+| Linear Discriminant Analysis | `algo_stack.supervised.lda` |
+| Bayesian Linear Regression | `algo_stack.supervised.bayesian_linear_regression` |
 
-Shared neural-network primitives: `algo_stack.utils.activations`, `algo_stack.utils.optim`.
+### Supervised — instance / tree / probabilistic / kernel
+| Algorithm | Module |
+| --------- | ------ |
+| K-Nearest Neighbours | `algo_stack.supervised.knn` |
+| Decision Tree (CART) | `algo_stack.supervised.decision_tree` |
+| Random Forest | `algo_stack.supervised.random_forest` |
+| Gradient Boosting | `algo_stack.supervised.gradient_boosting` |
+| Gaussian Naive Bayes | `algo_stack.supervised.gaussian_nb` |
+| Multinomial Naive Bayes | `algo_stack.supervised.multinomial_nb` |
+| SVM (SVC / SVR) | `algo_stack.supervised.svm` |
+| Kernel Ridge | `algo_stack.supervised.kernel_ridge` |
 
-See [`docs/ROADMAP.md`](docs/ROADMAP.md) for the planned algorithm list.
+### Supervised — neural networks
+| Algorithm | Module |
+| --------- | ------ |
+| Multi-Layer Perceptron | `algo_stack.supervised.mlp` |
+| CNN (toy) | `algo_stack.supervised.cnn` |
+| RNN (vanilla) | `algo_stack.supervised.rnn` |
+| LSTM / GRU | `algo_stack.supervised.lstm` |
+
+### Unsupervised
+| Algorithm | Module |
+| --------- | ------ |
+| K-Means | `algo_stack.unsupervised.kmeans` |
+| Mini-batch K-Means | `algo_stack.unsupervised.minibatch_kmeans` |
+| DBSCAN | `algo_stack.unsupervised.dbscan` |
+| Gaussian Mixture (EM) | `algo_stack.unsupervised.gmm` |
+| Agglomerative Clustering | `algo_stack.unsupervised.hierarchical` |
+| PCA | `algo_stack.unsupervised.pca` |
+| Kernel PCA | `algo_stack.unsupervised.kernel_pca` |
+| t-SNE | `algo_stack.unsupervised.tsne` |
+| UMAP (simplified) | `algo_stack.unsupervised.umap` |
+| Kernel Density Estimation | `algo_stack.unsupervised.kde` |
+| Autoencoder | `algo_stack.unsupervised.autoencoder` |
+| Denoising Autoencoder | `algo_stack.unsupervised.denoising_autoencoder` |
+| Variational Autoencoder | `algo_stack.unsupervised.vae` |
+| Convolutional Autoencoder | `algo_stack.unsupervised.conv_autoencoder` |
+
+### Preprocessing & metrics
+| Algorithm | Module |
+| --------- | ------ |
+| StandardScaler | `algo_stack.preprocessing.standard_scaler` |
+| MinMaxScaler | `algo_stack.preprocessing.minmax_scaler` |
+| OneHotEncoder | `algo_stack.preprocessing.one_hot_encoder` |
+| PolynomialFeatures | `algo_stack.preprocessing.polynomial_features` |
+| Metrics suite | `algo_stack.metrics` |
+
+Shared primitives: `algo_stack.utils.activations`, `optim`, `kernels`.
+
+See [`docs/ROADMAP.md`](docs/ROADMAP.md) for remaining stretch goals (KD-tree, L-BFGS).
 
 ---
 
@@ -117,6 +139,6 @@ See [`docs/ROADMAP.md`](docs/ROADMAP.md) for the planned algorithm list.
 1. Read [`docs/CONVENTIONS.md`](docs/CONVENTIONS.md).
 2. Pick a slot under `algo_stack/<category>/<name>/`.
 3. Copy the three doc templates from `docs/templates/` and fill them in.
-4. Inherit from `algo_stack._base.BaseEstimator` (and one of the mixins).
+4. Inherit from `algo_stack._base.BaseEstimator` (and the relevant mixin).
 5. Add a test in `tests/test_<name>.py`.
-6. Update `docs/ROADMAP.md` and the *Currently implemented* table above.
+6. Update `docs/ROADMAP.md` and the tables above.
