@@ -22,12 +22,22 @@ algo_stack/<category>/<algorithm_name>/
 
 - `supervised`     – needs labelled targets `y`
 - `unsupervised`   – uses only `X`
-- `preprocessing`  – transformers that produce new `X`
-- `metrics`        – pure functions (not estimators)
+- `preprocessing`  – transformers that produce new `X` (same four-file layout)
+- `metrics`        – pure evaluation functions (package of callables, not estimators)
 - *(extend as needed)*
 
 `<algorithm_name>` must be **lower_snake_case** and match the canonical name of
 the algorithm (e.g. `linear_regression`, not `linreg`).
+
+**Category notes**
+
+- `preprocessing/` estimators inherit `BaseEstimator` + `TransformerMixin`,
+  expose `fit` / `transform` / `fit_transform` (and `inverse_transform` when
+  applicable), and live in the usual per-algorithm folders.
+- `metrics/` is a flatter package: `__init__.py` re-exports shared scores from
+  `algo_stack.utils.metrics` and adds extras (`precision_recall_f1`,
+  `confusion_matrix`, `silhouette_score`, `log_loss`). Document them in
+  `algo_stack/metrics/README.md` rather than one folder per function.
 
 ---
 
