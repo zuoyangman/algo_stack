@@ -1,0 +1,23 @@
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Build artefacts
+*.o
+*.obj
+*.exe
+*.class
+a.out
+target/
+bin/
+pkg/
+
+# Editor / IDE
+.idea/
+.vscode/
+*.swp
+*.iml
+
+# Language tooling
+Cargo.lock
+vendor/
