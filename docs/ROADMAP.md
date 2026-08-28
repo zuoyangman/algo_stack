@@ -74,6 +74,15 @@ Legend: ✅ implemented · 🟡 in progress · ⬜ planned
 - ✅ SGD / Momentum / Adam (`utils/optim.py`)
 - ⬜ Line search / L-BFGS-style optimiser
 
+## Document parsing (multimodal ingestion — 文 / 图 / 音 / 视)
+- ✅ Unified `DocumentParser` facade (`parsing/document_parser.py`)
+- ✅ Text parser — `.txt/.md/.json/.csv/.html` (`parsing/text`)
+- ✅ Image parser — PNG decode + JPEG/GIF metadata (`parsing/image`)
+- ✅ Audio parser — WAV waveform (`parsing/audio`)
+- ✅ Video parser — container sniff + ffprobe/ffmpeg hooks (`parsing/video`)
+- ⬜ PDF / DOCX parsers
+- ⬜ OCR (Tesseract) / ASR (Whisper) plugin backends
+
 ---
 
 When adding an item, move it to ✅ and link to its module in this file *and*

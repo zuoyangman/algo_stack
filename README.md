@@ -44,6 +44,7 @@ algo_stack/
 │   └── unsupervised/
 │       ├── kmeans/
 │       └── autoencoder/
+│   └── parsing/             <- 文 / 图 / 音 / 视 document parsing
 └── tests/                   <- pytest suite, one file per algorithm
 ```
 
@@ -107,6 +108,20 @@ python -m algo_stack.supervised.linear_regression.example
 | Unsupervised  | Autoencoder          | `algo_stack.unsupervised.autoencoder`                    |
 
 Shared neural-network primitives: `algo_stack.utils.activations`, `algo_stack.utils.optim`.
+
+### Document parsing — 文 / 图 / 音 / 视
+
+| Component | Module |
+| --------- | ------ |
+| Unified parser | `algo_stack.parsing` (`parse`, `DocumentParser`) |
+| 文 Text | `algo_stack.parsing.text` |
+| 图 Image | `algo_stack.parsing.image` |
+| 音 Audio | `algo_stack.parsing.audio` |
+| 视 Video | `algo_stack.parsing.video` |
+
+```bash
+python -m algo_stack.parsing.example
+```
 
 See [`docs/ROADMAP.md`](docs/ROADMAP.md) for the planned algorithm list.
 

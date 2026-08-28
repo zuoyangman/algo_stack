@@ -24,6 +24,7 @@ algo_stack/<category>/<algorithm_name>/
 - `unsupervised`   – uses only `X`
 - `preprocessing`  – transformers that produce new `X`
 - `metrics`        – pure functions (not estimators)
+- `parsing`        – multimodal document ingestion (文 / 图 / 音 / 视)
 - *(extend as needed)*
 
 `<algorithm_name>` must be **lower_snake_case** and match the canonical name of
